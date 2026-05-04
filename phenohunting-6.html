@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhenoHunt — Registro de Fenotipos</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f0a;
+    --surface: #151810;
+    --surface2: #1c2014;
+    --border: #2a3020;
+    --accent: #7ec850;
+    --accent2: #b8f070;
+    --accent-dim: #3d6028;
+    --text: #d4e8c0;
+    --text-dim: #7a9060;
+    --text-muted: #445535;
+    --danger: #e05050;
+    --warn: #d4a030;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 20px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .logo {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: var(--accent2);
+    letter-spacing: -0.02em;
+  }
+
+  .logo span { color: var(--text-dim); font-weight: 400; }
+
+  .day-badge {
+    background: var(--accent-dim);
+    color: var(--accent2);
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 4px;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 8px 4px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+
+  .tab.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent2);
+  }
+
+  /* VIEWS */
+  .view { display: none; padding: 16px; }
+  .view.active { display: block; }
+
+  /* SECTION TITLES */
+  .section-title {
+    font-family: var(--sans);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* PLANT CARDS GRID */
+  .plants-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .plant-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .plant-card:hover, .plant-card.selected {
+    border-color: var(--accent);
+    background: var(--surface2);
+  }
+
+  .plant-card.selected::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--accent);
+  }
+
+  .plant-id {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .plant-genetic {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .plant-scores {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .score-pip {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .score-pip.filled { background: var(--accent); }
+
+  .plant-status {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  .plant-status.has-data { color: var(--accent-dim); }
+
+  /* REGISTRO FORM */
+  .registro-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--surface);
+    border: 1px solid var(--accent-dim);
+    border-radius: 4px;
+  }
+
+  .registro-plant-id {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 1.8rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .registro-info { flex: 1; }
+  .registro-genetic { font-size: 0.75rem; color: var(--text-dim); }
+  .registro-week { font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; }
+
+  /* FORM FIELDS */
+  .field-group {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+
+  .field-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .field-label span {
+    color: var(--text-dim);
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.65rem;
+  }
+
+  /* STAR RATING */
+  .star-rating {
+    display: flex;
+    gap: 6px;
+  }
+
+  .star {
+    width: 32px; height: 32px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text-muted);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .star.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent2);
+  }
+
+  /* TEXTAREA */
+  textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    padding: 10px;
+    resize: vertical;
+    min-height: 70px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus { border-color: var(--accent-dim); }
+  textarea::placeholder { color: var(--text-muted); }
+
+  /* INPUT */
+  input[type="text"], input[type="number"], select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    padding: 9px 10px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+
+  input:focus, select:focus { border-color: var(--accent-dim); }
+
+  select option { background: var(--surface2); }
+
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .input-row .field-group { margin-bottom: 0; }
+
+  /* SEMANA SELECTOR */
+  .week-selector {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .week-btn {
+    padding: 6px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .week-btn.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent2);
+  }
+
+  /* SAVE BUTTON */
+  .btn-save {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    border: none;
+    border-radius: 3px;
+    color: var(--bg);
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 14px;
+    text-transform: uppercase;
+  }
+
+  .btn-save:hover { background: var(--accent2); }
+
+  .btn-secondary {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn-secondary:hover { border-color: var(--accent-dim); color: var(--text); }
+
+  /* RESUMEN / COMPARATIVA */
+  .compare-table {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.7rem;
+    min-width: 500px;
+  }
+
+  th {
+    text-align: left;
+    padding: 8px 10px;
+    background: var(--surface);
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 0.6rem;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+  }
+
+  tr:hover td { background: var(--surface); }
+
+  .score-display {
+    display: flex;
+    gap: 2px;
+  }
+
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); }
+  .dot.on { background: var(--accent); }
+
+  .winner-badge {
+    background: var(--accent-dim);
+    color: var(--accent2);
+    font-size: 0.55rem;
+    padding: 2px 6px;
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* COSECHA SECTION */
+  .cosecha-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+
+  .cosecha-plant-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .cosecha-id {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--accent);
+  }
+
+  .tag {
+    font-size: 0.6rem;
+    padding: 3px 8px;
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .tag-pending { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+  .tag-done { background: var(--accent-dim); color: var(--accent2); }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--accent);
+    color: var(--bg);
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 10px 20px;
+    border-radius: 3px;
+    transition: transform 0.3s;
+    z-index: 999;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* SETUP */
+  .setup-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+
+  .setup-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .setup-row:last-child { border-bottom: none; }
+
+  .setup-label { font-size: 0.7rem; color: var(--text-dim); }
+
+  .setup-val {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--accent2);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    line-height: 1.8;
+  }
+
+  .aroma-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .aroma-tag {
+    padding: 5px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .aroma-tag.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent2);
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.5s;
+  }
+
+  @media (min-width: 600px) {
+    body { max-width: 700px; margin: 0 auto; }
+    .plants-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo">PhenoHunt <span>// tracker</span></div>
+    <div class="day-badge" id="dayBadge">Día 9 · Flor</div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('overview')">Vista</button>
+    <button class="tab" onclick="switchTab('registro')">Registro</button>
+    <button class="tab" onclick="switchTab('cosecha')">Cosecha</button>
+    <button class="tab" onclick="switchTab('comparar')">Comparar</button>
+  </div>
+</header>
+
+<!-- VISTA GENERAL -->
+<div id="tab-overview" class="view active">
+  <p class="section-title" style="margin-top:4px">Plantas activas — seleccioná para registrar</p>
+  <div class="plants-grid" id="plantsGrid"></div>
+
+  <p class="section-title">Progreso del ciclo</p>
+  <div class="setup-card">
+    <div class="setup-row">
+      <span class="setup-label">Día de floración</span>
+      <span class="setup-val" id="currentDay">9</span>
+    </div>
+    <div class="setup-row">
+      <span class="setup-label">Semanas completadas</span>
+      <span class="setup-val" id="weeksDisplay">1.3 sem</span>
+    </div>
+    <div class="setup-row">
+      <span class="setup-label">Registros cargados</span>
+      <span class="setup-val" id="totalRegistros">0</span>
+    </div>
+    <div class="setup-row">
+      <span class="setup-label">Plantas sin datos esta semana</span>
+      <span class="setup-val" id="plantasSinDatos" style="color:var(--warn)">16</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="cycleProgress" style="width:15%"></div>
+    </div>
+    <p style="font-size:0.6rem;color:var(--text-muted);margin-top:6px">Estimado 9 semanas de floración</p>
+  </div>
+
+  <p class="section-title">Configurar ciclo</p>
+  <div class="setup-card">
+    <div class="setup-row">
+      <span class="setup-label">Inicio de floración</span>
+      <input type="date" id="florStartInput" style="color-scheme:dark;background:var(--surface2);border:1px solid var(--border);color:var(--accent2);font-family:var(--mono);font-size:0.8rem;padding:4px 8px;border-radius:2px;outline:none;" onchange="updateStartDate()">
+    </div>
+    <div class="setup-row">
+      <span class="setup-label">Semanas totales estimadas</span>
+      <input type="number" id="totalWeeksInput" value="9" min="6" max="14" style="width:80px;text-align:center" onchange="updateStartDate()">
+    </div>
+    <div class="setup-row">
+      <span class="setup-label">¿Fechas incorrectas?</span>
+      <button onclick="resetStorage()" style="background:var(--surface2);border:1px solid var(--border);color:var(--warn);font-family:var(--mono);font-size:0.7rem;padding:6px 12px;border-radius:2px;cursor:pointer;">Reset fechas</button>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTRO SEMANAL -->
+<div id="tab-registro" class="view">
+  <div id="plantSelector">
+    <p class="section-title">Seleccioná una planta para registrar</p>
+    <div class="plants-grid" id="plantsGridRegistro"></div>
+  </div>
+
+  <div id="registroForm" style="display:none">
+    <div class="registro-header">
+      <div class="registro-plant-id" id="formPlantId">P1</div>
+      <div class="registro-info">
+        <div class="registro-genetic" id="formGenetic">—</div>
+        <div class="registro-week" id="formWeek">Semana 1</div>
+      </div>
+      <button onclick="closeForm()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:4px 10px;font-family:var(--mono);font-size:0.7rem;cursor:pointer;border-radius:2px">✕ cerrar</button>
+    </div>
+
+    <p class="section-title">Semana de registro</p>
+    <div class="field-group">
+      <label class="field-label">Semana de floración</label>
+      <div class="week-selector" id="weekSelector"></div>
+    </div>
+
+    <p class="section-title">Desarrollo floral</p>
+
+    <div class="field-group">
+      <label class="field-label">Desarrollo de cogollos <span>— velocidad y forma</span></label>
+      <div class="star-rating" id="stars-desarrollo"></div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Producción de resina <span>— tricomas visibles</span></label>
+      <div class="star-rating" id="stars-resina"></div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Estructura de planta <span>— altura, ramificación</span></label>
+      <textarea id="field-estructura" placeholder="Ej: altura 80cm, compacta, buena ramificación lateral..." rows="2"></textarea>
+    </div>
+
+    <p class="section-title">Aroma</p>
+    <div class="field-group">
+      <label class="field-label">Perfil aromático <span>— seleccioná los que aplican</span></label>
+      <div class="aroma-tags" id="aromaTags">
+        <span class="aroma-tag" onclick="toggleAroma(this)">🍋 Cítrico</span>
+        <span class="aroma-tag" onclick="toggleAroma(this)">🌲 Pino</span>
+        <span class="aroma-tag" onclick="toggleAroma(this)">🍇 Frutal</span>
+        <span class="aroma-tag" onclick="toggleAroma(this)">🌿 Tierra</span>
+        <span class="aroma-tag" onclick="toggleAroma(this)">⛽ Fuel</span>
+        <span class="aroma-tag" onclick="toggleAroma(this)">🍬 Dulce</span>
+        <span class="aroma-tag" onclick="toggleAroma(this)">🌸 Floral</span>
+        <span class="aroma-tag" onclick="toggleAroma(this)">🧀 Queso</span>
+        <span class="aroma-tag" onclick="toggleAroma(this)">🫙 Hash</span>
+        <span class="aroma-tag" onclick="toggleAroma(this)">🫐 Berries</span>
+        <span class="aroma-tag" onclick="toggleAroma(this)">🌶 Especiado</span>
+        <span class="aroma-tag" onclick="toggleAroma(this)">💨 Skunk</span>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Notas de aroma <span>— descripción libre</span></label>
+      <textarea id="field-aroma" placeholder="Ej: aroma intenso, predomina cítrico con fondo terroso..." rows="2"></textarea>
+    </div>
+
+    <p class="section-title">Salud general</p>
+
+    <div class="field-group">
+      <label class="field-label">Estado de salud <span>— hojas, color, signos de estrés</span></label>
+      <div class="star-rating" id="stars-salud"></div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Observaciones <span>— cualquier nota relevante</span></label>
+      <textarea id="field-obs" placeholder="Ej: leve amarillamiento en hojas bajas, sin deficiencias visibles..." rows="3"></textarea>
+    </div>
+
+    <button class="btn-save" onclick="saveRegistro()">💾 Guardar registro</button>
+    <button class="btn-secondary" onclick="closeForm()">Cancelar</button>
+  </div>
+</div>
+
+<!-- COSECHA -->
+<div id="tab-cosecha" class="view">
+  <p class="section-title">Datos de cosecha por planta</p>
+  <div id="cosechaList"></div>
+</div>
+
+<!-- COMPARAR -->
+<div id="tab-comparar" class="view">
+  <p class="section-title">Tabla comparativa de fenotipos</p>
+  <div class="compare-table">
+    <table id="compareTable">
+      <thead>
+        <tr>
+          <th>Planta</th>
+          <th>Genética</th>
+          <th>Desarrollo</th>
+          <th>Resina</th>
+          <th>Salud</th>
+          <th>Aroma</th>
+          <th>P.Seco</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody id="compareBody"></tbody>
+    </table>
+  </div>
+  <div id="emptyCompare" class="empty-state">
+    Aún no hay datos suficientes para comparar.<br>Cargá registros semanales para cada planta.
+  </div>
+
+  <div style="margin-top:20px" id="winnerSection" style="display:none"></div>
+</div>
+
+<div class="toast" id="toast">✓ Guardado</div>
+
+<script>
+// ============ DATA STRUCTURE ============
+const PLANT_LIST = [
+  { id: 'FIN-F1', genetic: 'Finessin' },
+  { id: 'FIN-F2', genetic: 'Finessin' },
+  { id: 'FIN-F3', genetic: 'Finessin' },
+  { id: 'FIN-F4', genetic: 'Finessin' },
+  { id: 'FIN-F5', genetic: 'Finessin' },
+  { id: 'STR-F1', genetic: 'Strawberrys' },
+  { id: 'STR-F2', genetic: 'Strawberrys' },
+  { id: 'STR-F3', genetic: 'Strawberrys' },
+  { id: 'STR-F4', genetic: 'Strawberrys' },
+  { id: 'STR-F5', genetic: 'Strawberrys' },
+  { id: 'DIN-F1', genetic: 'Dino Cat' },
+  { id: 'DIN-F2', genetic: 'Dino Cat' },
+  { id: 'DIN-F3', genetic: 'Dino Cat' },
+  { id: 'PEG-F1', genetic: 'Pega Morada' },
+  { id: 'PEG-F2', genetic: 'Pega Morada' },
+  { id: 'STL',    genetic: 'Stallion' },
+];
+
+let appData = JSON.parse(localStorage.getItem('phenohunt') || 'null') || {
+  florDay: 15,
+  florStart: '2026-04-20',
+  totalWeeks: 9,
+  plants: [],
+  registros: {},
+  cosecha: {}
+};
+
+// Calcular día automáticamente si hay fecha de inicio
+if (appData.florStart) {
+  const parts = appData.florStart.split('-');
+  const start = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.floor((today - start) / (1000 * 60 * 60 * 24)) + 1;
+  if (diffDays >= 1) appData.florDay = diffDays;
+}
+
+// Init plants if empty
+if (appData.plants.length === 0) {
+  PLANT_LIST.forEach(p => {
+    appData.plants.push({ id: p.id, genetic: p.genetic, notes: '' });
+  });
+  saveData();
+}
+
+let currentPlant = null;
+let currentWeek = 1;
+
+function saveData() {
+  localStorage.setItem('phenohunt', JSON.stringify(appData));
+}
+
+// ============ TABS ============
+function switchTab(tab) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
+
+  if (tab === 'overview') renderOverview();
+  if (tab === 'registro') renderRegistroSelector();
+  if (tab === 'cosecha') renderCosecha();
+  if (tab === 'comparar') renderComparar();
+}
+
+// ============ OVERVIEW ============
+function renderOverview() {
+  const grid = document.getElementById('plantsGrid');
+  grid.innerHTML = '';
+  let sinDatos = 0;
+  const currentWeekNum = Math.ceil(appData.florDay / 7);
+
+  appData.plants.forEach(p => {
+    const regs = appData.registros[p.id] || [];
+    const hasThisWeek = regs.some(r => r.week === currentWeekNum);
+    if (!hasThisWeek) sinDatos++;
+
+    const avgScore = calcAvgScore(p.id);
+    const card = document.createElement('div');
+    card.className = 'plant-card';
+    card.innerHTML = `
+      <div class="plant-id">${p.id}</div>
+      <div class="plant-genetic">${p.genetic}</div>
+      <div class="plant-scores">
+        ${[1,2,3,4,5].map(n => `<div class="score-pip ${avgScore >= n ? 'filled' : ''}"></div>`).join('')}
+      </div>
+      <div class="plant-status ${regs.length > 0 ? 'has-data' : ''}">
+        ${regs.length > 0 ? `${regs.length} reg · ${hasThisWeek ? '✓ sem actual' : '⚠ pendiente'}` : 'sin datos'}
+      </div>
+    `;
+    card.onclick = () => { switchTabDirect('registro'); openForm(p.id); };
+    grid.appendChild(card);
+  });
+
+  document.getElementById('totalRegistros').textContent = Object.values(appData.registros).flat().length;
+  document.getElementById('plantasSinDatos').textContent = sinDatos;
+  updateDay();
+}
+
+function switchTabDirect(tab) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.tab')[1].classList.add('active');
+  renderRegistroSelector();
+}
+
+function updateStartDate() {
+  const val = document.getElementById('florStartInput').value;
+  const totalW = parseInt(document.getElementById('totalWeeksInput').value) || 9;
+  if (val) {
+    appData.florStart = val;
+    const parts = val.split('-');
+    const start = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffDays = Math.floor((today - start) / (1000 * 60 * 60 * 24)) + 1;
+    if (diffDays >= 1) appData.florDay = diffDays;
+  }
+  appData.totalWeeks = totalW;
+  saveData();
+  const day = appData.florDay;
+  document.getElementById('dayBadge').textContent = `Día ${day} · Flor`;
+  document.getElementById('currentDay').textContent = day;
+  document.getElementById('weeksDisplay').textContent = (day / 7).toFixed(1) + ' sem';
+  const pct = Math.min(100, Math.round((day / (totalW * 7)) * 100));
+  document.getElementById('cycleProgress').style.width = pct + '%';
+}
+
+function resetStorage() {
+  if (confirm('¿Resetear configuración de fechas? Los registros de plantas NO se borran.')) {
+    const registros = appData.registros;
+    const cosecha = appData.cosecha;
+    const plants = appData.plants;
+    localStorage.removeItem('phenohunt');
+    appData = {
+      florDay: 14,
+      florStart: '2026-04-21',
+      totalWeeks: 9,
+      plants: plants,
+      registros: registros,
+      cosecha: cosecha
+    };
+    recalcDay();
+    saveData();
+    location.reload();
+  }
+}
+
+function recalcDay() {
+  if (appData.florStart) {
+    const parts = appData.florStart.split('-');
+    const start = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffDays = Math.floor((today - start) / (1000 * 60 * 60 * 24)) + 1;
+    if (diffDays >= 1) appData.florDay = diffDays;
+  }
+}
+
+// ============ REGISTRO ============
+function renderRegistroSelector() {
+  const grid = document.getElementById('plantsGridRegistro');
+  grid.innerHTML = '';
+  appData.plants.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'plant-card' + (currentPlant === p.id ? ' selected' : '');
+    const regs = appData.registros[p.id] || [];
+    card.innerHTML = `
+      <div class="plant-id">${p.id}</div>
+      <div class="plant-genetic">${p.genetic}</div>
+      <div class="plant-status ${regs.length > 0 ? 'has-data' : ''}">${regs.length > 0 ? regs.length + ' registros' : 'sin datos'}</div>
+    `;
+    card.onclick = () => openForm(p.id);
+    grid.appendChild(card);
+  });
+}
+
+function openForm(plantId) {
+  currentPlant = plantId;
+  const plant = appData.plants.find(p => p.id === plantId);
+  currentWeek = Math.ceil(appData.florDay / 7);
+
+  document.getElementById('plantSelector').style.display = 'none';
+  document.getElementById('registroForm').style.display = 'block';
+  document.getElementById('formPlantId').textContent = plantId;
+  document.getElementById('formGenetic').textContent = plant.genetic;
+  document.getElementById('formWeek').textContent = `Semana ${currentWeek} de floración`;
+
+  // Build week selector
+  const ws = document.getElementById('weekSelector');
+  ws.innerHTML = '';
+  for (let w = 1; w <= appData.totalWeeks; w++) {
+    const btn = document.createElement('button');
+    btn.className = 'week-btn' + (w === currentWeek ? ' active' : '');
+    btn.textContent = `S${w}`;
+    btn.onclick = () => {
+      currentWeek = w;
+      document.querySelectorAll('.week-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      loadExistingRegistro();
+    };
+    ws.appendChild(btn);
+  }
+
+  // Build star ratings
+  buildStars('stars-desarrollo', 'desarrollo');
+  buildStars('stars-resina', 'resina');
+  buildStars('stars-salud', 'salud');
+
+  loadExistingRegistro();
+}
+
+function loadExistingRegistro() {
+  const regs = appData.registros[currentPlant] || [];
+  const existing = regs.find(r => r.week === currentWeek);
+
+  // Reset
+  clearStars('stars-desarrollo');
+  clearStars('stars-resina');
+  clearStars('stars-salud');
+  document.getElementById('field-estructura').value = '';
+  document.getElementById('field-aroma').value = '';
+  document.getElementById('field-obs').value = '';
+  document.querySelectorAll('.aroma-tag').forEach(t => t.classList.remove('active'));
+
+  if (existing) {
+    setStars('stars-desarrollo', existing.desarrollo || 0);
+    setStars('stars-resina', existing.resina || 0);
+    setStars('stars-salud', existing.salud || 0);
+    document.getElementById('field-estructura').value = existing.estructura || '';
+    document.getElementById('field-aroma').value = existing.aroma || '';
+    document.getElementById('field-obs').value = existing.obs || '';
+    if (existing.aromatags) {
+      document.querySelectorAll('.aroma-tag').forEach(t => {
+        if (existing.aromatags.includes(t.textContent.trim())) t.classList.add('active');
+      });
+    }
+  }
+}
+
+function buildStars(containerId, field) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.textContent = i;
+    s.dataset.val = i;
+    s.dataset.field = field;
+    s.onclick = () => {
+      const val = parseInt(s.dataset.val);
+      setStars(containerId, val);
+    };
+    c.appendChild(s);
+  }
+}
+
+function clearStars(containerId) {
+  document.querySelectorAll(`#${containerId} .star`).forEach(s => s.classList.remove('active'));
+}
+
+function setStars(containerId, val) {
+  document.querySelectorAll(`#${containerId} .star`).forEach(s => {
+    s.classList.toggle('active', parseInt(s.dataset.val) <= val);
+  });
+}
+
+function getStarVal(containerId) {
+  let val = 0;
+  document.querySelectorAll(`#${containerId} .star`).forEach(s => {
+    if (s.classList.contains('active')) val = parseInt(s.dataset.val);
+  });
+  return val;
+}
+
+function toggleAroma(el) { el.classList.toggle('active'); }
+
+function saveRegistro() {
+  const reg = {
+    week: currentWeek,
+    desarrollo: getStarVal('stars-desarrollo'),
+    resina: getStarVal('stars-resina'),
+    salud: getStarVal('stars-salud'),
+    estructura: document.getElementById('field-estructura').value,
+    aroma: document.getElementById('field-aroma').value,
+    obs: document.getElementById('field-obs').value,
+    aromatagsList: [...document.querySelectorAll('.aroma-tag.active')].map(t => t.textContent.trim()),
+    ts: Date.now()
+  };
+
+  if (!appData.registros[currentPlant]) appData.registros[currentPlant] = [];
+  const idx = appData.registros[currentPlant].findIndex(r => r.week === currentWeek);
+  if (idx >= 0) appData.registros[currentPlant][idx] = reg;
+  else appData.registros[currentPlant].push(reg);
+
+  saveData();
+  showToast('✓ Registro guardado');
+  closeForm();
+}
+
+function closeForm() {
+  document.getElementById('plantSelector').style.display = 'block';
+  document.getElementById('registroForm').style.display = 'none';
+  currentPlant = null;
+  renderRegistroSelector();
+}
+
+// ============ COSECHA ============
+function renderCosecha() {
+  const list = document.getElementById('cosechaList');
+  list.innerHTML = '';
+
+  appData.plants.forEach(p => {
+    const cos = appData.cosecha[p.id] || {};
+    const hasCos = cos.pesoSeco !== undefined;
+
+    const card = document.createElement('div');
+    card.className = 'cosecha-card';
+    card.innerHTML = `
+      <div class="cosecha-plant-header">
+        <div>
+          <div class="cosecha-id">${p.id} <span style="font-size:0.7rem;color:var(--text-dim);font-family:var(--mono)">${p.genetic}</span></div>
+        </div>
+        <span class="tag ${hasCos ? 'tag-done' : 'tag-pending'}">${hasCos ? '✓ cosechada' : 'pendiente'}</span>
+      </div>
+      <div class="input-row" style="margin-bottom:8px">
+        <div class="field-group">
+          <label class="field-label">Peso húmedo (g)</label>
+          <input type="number" id="cos-humid-${p.id}" value="${cos.pesoHumedo || ''}" placeholder="0g">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Peso seco (g)</label>
+          <input type="number" id="cos-seco-${p.id}" value="${cos.pesoSeco || ''}" placeholder="0g">
+        </div>
+      </div>
+      <div class="input-row" style="margin-bottom:8px">
+        <div class="field-group">
+          <label class="field-label">Semanas floración</label>
+          <input type="number" id="cos-weeks-${p.id}" value="${cos.semanas || ''}" placeholder="9">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Densidad cogollos</label>
+          <select id="cos-densidad-${p.id}">
+            <option value="">—</option>
+            <option ${cos.densidad === 'suelta' ? 'selected' : ''}>suelta</option>
+            <option ${cos.densidad === 'media' ? 'selected' : ''}>media</option>
+            <option ${cos.densidad === 'densa' ? 'selected' : ''}>densa</option>
+            <option ${cos.densidad === 'muy densa' ? 'selected' : ''}>muy densa</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group" style="margin-bottom:8px">
+        <label class="field-label">Efecto / notas post-cosecha</label>
+        <textarea id="cos-efecto-${p.id}" rows="2" placeholder="Perfil de efecto, potencia estimada, notas finales...">${cos.efecto || ''}</textarea>
+      </div>
+      <button class="btn-save" style="margin-top:0;padding:10px;font-size:0.8rem" onclick="saveCosecha('${p.id}')">Guardar cosecha</button>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function saveCosecha(plantId) {
+  appData.cosecha[plantId] = {
+    pesoHumedo: parseFloat(document.getElementById(`cos-humid-${plantId}`).value) || null,
+    pesoSeco: parseFloat(document.getElementById(`cos-seco-${plantId}`).value) || null,
+    semanas: parseInt(document.getElementById(`cos-weeks-${plantId}`).value) || null,
+    densidad: document.getElementById(`cos-densidad-${plantId}`).value,
+    efecto: document.getElementById(`cos-efecto-${plantId}`).value,
+  };
+  saveData();
+  showToast('✓ Cosecha guardada');
+  renderCosecha();
+}
+
+// ============ COMPARAR ============
+function calcAvgScore(plantId) {
+  const regs = appData.registros[plantId] || [];
+  if (!regs.length) return 0;
+  const total = regs.reduce((a, r) => a + ((r.desarrollo + r.resina + r.salud) / 3), 0);
+  return Math.round(total / regs.length);
+}
+
+function renderComparar() {
+  const tbody = document.getElementById('compareBody');
+  tbody.innerHTML = '';
+
+  const scores = appData.plants.map(p => {
+    const cos = appData.cosecha[p.id] || {};
+    const avg = calcAvgScore(p.id);
+    const regs = appData.registros[p.id] || [];
+    const aromaFinal = regs.length > 0 ? (regs[regs.length - 1].aromatagsList || []).slice(0, 2).join(', ') : '—';
+    return { p, avg, cos, aromaFinal };
+  });
+
+  const maxScore = Math.max(...scores.map(s => s.avg));
+  const hasData = scores.some(s => s.avg > 0);
+
+  document.getElementById('emptyCompare').style.display = hasData ? 'none' : 'block';
+
+  scores.sort((a, b) => b.avg - a.avg);
+
+  scores.forEach(({ p, avg, cos, aromaFinal }) => {
+    const tr = document.createElement('tr');
+    const regs = appData.registros[p.id] || [];
+    const lastReg = regs[regs.length - 1] || {};
+    const isWinner = avg > 0 && avg === maxScore;
+
+    tr.innerHTML = `
+      <td><strong style="color:var(--accent)">${p.id}</strong> ${isWinner ? '<span class="winner-badge">★ top</span>' : ''}</td>
+      <td style="color:var(--text-dim);font-size:0.65rem">${p.genetic}</td>
+      <td><div class="score-display">${[1,2,3,4,5].map(n=>`<div class="dot ${(lastReg.desarrollo||0)>=n?'on':''}"></div>`).join('')}</div></td>
+      <td><div class="score-display">${[1,2,3,4,5].map(n=>`<div class="dot ${(lastReg.resina||0)>=n?'on':''}"></div>`).join('')}</div></td>
+      <td><div class="score-display">${[1,2,3,4,5].map(n=>`<div class="dot ${(lastReg.salud||0)>=n?'on':''}"></div>`).join('')}</div></td>
+      <td style="font-size:0.65rem;color:var(--text-dim)">${aromaFinal || '—'}</td>
+      <td style="color:${cos.pesoSeco ? 'var(--accent2)' : 'var(--text-muted)'}">${cos.pesoSeco ? cos.pesoSeco+'g' : '—'}</td>
+      <td><strong style="color:${avg > 0 ? 'var(--accent)' : 'var(--text-muted)'}">${avg > 0 ? avg+'/5' : '—'}</strong></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ============ TOAST ============
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ============ INIT ============
+// Set date input value
+const florStartInput = document.getElementById('florStartInput');
+if (florStartInput && appData.florStart) {
+  florStartInput.value = appData.florStart;
+}
+renderOverview();
+renderRegistroSelector();
+</script>
+</body>
+</html>
