@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sala Cuki — Calculadora Diaria</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Unbounded:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a08;
+    --s1: #111210;
+    --s2: #181a14;
+    --s3: #1f2218;
+    --border: #2c3022;
+    --border2: #3a4030;
+    --green: #8bc34a;
+    --green2: #c5e87a;
+    --green-dim: #3d5c18;
+    --amber: #ffb300;
+    --amber-dim: #5c3d00;
+    --red: #e53935;
+    --red-dim: #5c1010;
+    --blue: #42a5f5;
+    --blue-dim: #0d3a5c;
+    --text: #ccd8a8;
+    --text-dim: #7a8c58;
+    --text-muted: #3d4d28;
+    --mono: 'DM Mono', monospace;
+    --display: 'Unbounded', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  header {
+    padding: 20px 16px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--s1);
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .title {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1rem;
+    color: var(--green2);
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+
+  .title span {
+    display: block;
+    font-weight: 400;
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .week-badge {
+    font-size: 0.6rem;
+    padding: 4px 10px;
+    border-radius: 2px;
+    background: var(--green-dim);
+    color: var(--green2);
+    border: 1px solid var(--green);
+    font-family: var(--mono);
+    letter-spacing: 0.08em;
+  }
+
+  main { padding: 16px; }
+
+  /* PHASE SELECTOR */
+  .phase-selector {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .phase-btn {
+    flex: 1;
+    padding: 8px 4px;
+    background: var(--s2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .phase-btn.active-gen {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  .phase-btn.active-veg {
+    background: var(--green-dim);
+    border-color: var(--green);
+    color: var(--green2);
+  }
+
+  /* INPUT SECTIONS */
+  .section {
+    background: var(--s1);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .input-group.full {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    font-size: 0.58rem;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+  }
+
+  input[type="number"] {
+    background: var(--s2);
+    border: 1px solid var(--border2);
+    border-radius: 2px;
+    color: var(--green2);
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 8px 10px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+    -moz-appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+  }
+
+  input[type="number"]:focus {
+    border-color: var(--green);
+  }
+
+  input[type="number"]::placeholder {
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 400;
+  }
+
+  .unit {
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+  }
+
+  /* CALCULATE BUTTON */
+  .calc-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+    border-radius: 3px;
+    color: var(--green2);
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+  }
+
+  .calc-btn:active {
+    background: var(--green);
+    color: var(--bg);
+  }
+
+  /* RESULTS */
+  .results { display: none; }
+  .results.show { display: block; }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .result-card {
+    background: var(--s2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .result-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+  }
+
+  .result-card.ok::before { background: var(--green); }
+  .result-card.warn::before { background: var(--amber); }
+  .result-card.bad::before { background: var(--red); }
+  .result-card.info::before { background: var(--blue); }
+
+  .result-label {
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .result-value {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.6rem;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .result-card.ok .result-value { color: var(--green2); }
+  .result-card.warn .result-value { color: var(--amber); }
+  .result-card.bad .result-value { color: var(--red); }
+  .result-card.info .result-value { color: var(--blue); }
+
+  .result-sub {
+    font-size: 0.58rem;
+    color: var(--text-muted);
+    line-height: 1.3;
+  }
+
+  .result-card.full {
+    grid-column: 1 / -1;
+  }
+
+  /* CONSEJOS */
+  .advice-section {
+    margin-bottom: 12px;
+  }
+
+  .advice-title {
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .advice-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+    font-size: 0.7rem;
+    line-height: 1.5;
+    align-items: flex-start;
+  }
+
+  .advice-item.ok {
+    background: var(--green-dim);
+    border-left: 2px solid var(--green);
+    color: var(--green2);
+  }
+
+  .advice-item.warn {
+    background: var(--amber-dim);
+    border-left: 2px solid var(--amber);
+    color: var(--amber);
+  }
+
+  .advice-item.bad {
+    background: var(--red-dim);
+    border-left: 2px solid var(--red);
+    color: var(--red);
+  }
+
+  .advice-item.info {
+    background: var(--blue-dim);
+    border-left: 2px solid var(--blue);
+    color: var(--blue);
+  }
+
+  .advice-icon { flex-shrink: 0; font-size: 0.9rem; }
+
+  /* HISTORY */
+  .history-section {
+    background: var(--s1);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  .history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .history-title {
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .clear-btn {
+    font-size: 0.55rem;
+    padding: 3px 8px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 2px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    cursor: pointer;
+    letter-spacing: 0.06em;
+  }
+
+  .history-empty {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 16px 0;
+    font-style: italic;
+  }
+
+  .history-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 1fr 1fr 1fr;
+    gap: 6px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.6rem;
+    align-items: center;
+  }
+
+  .history-row:last-child { border-bottom: none; }
+
+  .history-row .date { color: var(--text-muted); }
+  .history-row .val { color: var(--text-dim); text-align: center; }
+  .history-row .val.green { color: var(--green2); }
+  .history-row .val.amber { color: var(--amber); }
+  .history-row .val.red { color: var(--red); }
+
+  .history-header-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 1fr 1fr 1fr;
+    gap: 6px;
+    padding-bottom: 6px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border2);
+    font-size: 0.52rem;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .history-header-row span { text-align: center; }
+  .history-header-row span:first-child { text-align: left; }
+
+  @media (min-width: 600px) {
+    body { max-width: 680px; margin: 0 auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="title">
+      <span>Sala Cuki</span>
+      Calculadora Diaria
+    </div>
+    <span class="week-badge" id="weekBadge">Semana 5</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- PHASE SELECTOR -->
+  <div class="phase-selector" style="margin-top:14px">
+    <button class="phase-btn" id="btnGen" onclick="setPhase('generativo')">⚡ Generativo</button>
+    <button class="phase-btn active-veg" id="btnVeg" onclick="setPhase('vegetativo')">🌿 Vegetativo</button>
+  </div>
+
+  <!-- VWC INPUT -->
+  <div class="section">
+    <div class="section-title">📊 Contenido de Agua (VWC)</div>
+    <div class="input-grid">
+      <div class="input-group">
+        <label>VWC Saturación máxima</label>
+        <input type="number" id="vwcMax" placeholder="ej: 63.2" step="0.1" min="0" max="100">
+        <div class="unit">% — pico post-riego</div>
+      </div>
+      <div class="input-group">
+        <label>VWC Apagado de luces</label>
+        <input type="number" id="vwcOff" placeholder="ej: 55.7" step="0.1" min="0" max="100">
+        <div class="unit">% — 4am</div>
+      </div>
+      <div class="input-group">
+        <label>VWC Encendido de luces</label>
+        <input type="number" id="vwcOn" placeholder="ej: 40.4" step="0.1" min="0" max="100">
+        <div class="unit">% — 16hs</div>
+      </div>
+      <div class="input-group">
+        <label>Semana de floración</label>
+        <input type="number" id="weekNum" placeholder="ej: 5" step="1" min="1" max="9" value="5">
+        <div class="unit">semana actual</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EC INPUT -->
+  <div class="section">
+    <div class="section-title">⚡ Electroconductividad</div>
+    <div class="input-grid">
+      <div class="input-group">
+        <label>Bulk EC sensor (máx)</label>
+        <input type="number" id="bulkEC" placeholder="ej: 1888" step="1" min="0">
+        <div class="unit">µS/cm — en saturación</div>
+      </div>
+      <div class="input-group">
+        <label>EC Runoff</label>
+        <input type="number" id="runoffEC" placeholder="ej: 5130" step="1" min="0">
+        <div class="unit">µS/cm</div>
+      </div>
+      <div class="input-group">
+        <label>Volumen Runoff</label>
+        <input type="number" id="runoffVol" placeholder="ej: 500" step="1" min="0">
+        <div class="unit">ml</div>
+      </div>
+      <div class="input-group">
+        <label>EC Input (tanque)</label>
+        <input type="number" id="inputEC" placeholder="ej: 2520" step="1" min="0">
+        <div class="unit">µS/cm</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="calc-btn" onclick="calculate()">▶ CALCULAR</button>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+
+    <div class="result-grid" id="resultGrid"></div>
+
+    <div class="advice-section">
+      <div class="advice-title">💡 Diagnóstico</div>
+      <div id="adviceContainer"></div>
+    </div>
+
+  </div>
+
+  <!-- HISTORY -->
+  <div class="history-section">
+    <div class="history-header">
+      <div class="history-title">📋 Historial</div>
+      <button class="clear-btn" onclick="clearHistory()">Borrar</button>
+    </div>
+    <div id="historyContent"></div>
+  </div>
+
+</main>
+
+<script>
+// ============ STATE ============
+let currentPhase = 'vegetativo';
+let history = JSON.parse(localStorage.getItem('cuki-history') || '[]');
+
+// ============ TARGETS ============
+const TARGETS = {
+  generativo: {
+    drybackNocturno: { min: 15, max: 30, label: 'Dryback nocturno generativo' },
+    drybackTotal: { min: 45, max: 60, label: 'Dryback total generativo' },
+    poreEC: { min: 3.5, max: 6.0, label: 'Pore EC sustrato' },
+    runoffEC: { min: 3.5, max: 6.0, label: 'EC Runoff' },
+    ratio: { min: 1.5, max: 2.3, label: 'Ratio runoff/pore' },
+  },
+  vegetativo: {
+    drybackNocturno: { min: 10, max: 20, label: 'Dryback nocturno vegetativo' },
+    drybackTotal: { min: 25, max: 40, label: 'Dryback total vegetativo' },
+    poreEC: { min: 2.5, max: 4.0, label: 'Pore EC sustrato' },
+    runoffEC: { min: 3.0, max: 6.0, label: 'EC Runoff' },
+    ratio: { min: 1.5, max: 2.2, label: 'Ratio runoff/pore' },
+  }
+};
+
+// ============ PHASE ============
+function setPhase(phase) {
+  currentPhase = phase;
+  document.getElementById('btnGen').className = 'phase-btn' + (phase === 'generativo' ? ' active-gen' : '');
+  document.getElementById('btnVeg').className = 'phase-btn' + (phase === 'vegetativo' ? ' active-veg' : '');
+}
+
+// ============ STATUS ============
+function getStatus(val, target) {
+  if (val === null) return 'info';
+  if (val < target.min) return 'warn';
+  if (val > target.max) return 'bad';
+  return 'ok';
+}
+
+function getStatusLabel(status) {
+  if (status === 'ok') return '✓ En rango';
+  if (status === 'warn') return '↓ Por debajo';
+  if (status === 'bad') return '↑ Por encima';
+  return '— Sin dato';
+}
+
+function statusColor(status) {
+  if (status === 'ok') return 'green';
+  if (status === 'warn') return 'amber';
+  if (status === 'bad') return 'red';
+  return '';
+}
+
+// ============ CALCULATE ============
+function calculate() {
+  const vwcMax = parseFloat(document.getElementById('vwcMax').value) || null;
+  const vwcOff = parseFloat(document.getElementById('vwcOff').value) || null;
+  const vwcOn = parseFloat(document.getElementById('vwcOn').value) || null;
+  const bulkEC = parseFloat(document.getElementById('bulkEC').value) || null;
+  const runoffEC = parseFloat(document.getElementById('runoffEC').value) || null;
+  const runoffVol = parseFloat(document.getElementById('runoffVol').value) || null;
+  const inputEC = parseFloat(document.getElementById('inputEC').value) || null;
+  const week = parseInt(document.getElementById('weekNum').value) || 5;
+
+  document.getElementById('weekBadge').textContent = `Semana ${week}`;
+
+  const t = TARGETS[currentPhase];
+
+  // Calculations
+  const drybackNocturno = (vwcOff && vwcOn && vwcMax)
+    ? ((vwcOff - vwcOn) / vwcMax * 100) : null;
+
+  const drybackTotal = (vwcMax && vwcOn)
+    ? ((vwcMax - vwcOn) / vwcMax * 100) : null;
+
+  const poreEC = (bulkEC && vwcMax)
+    ? (bulkEC / (vwcMax / 100) / 1000) : null;
+
+  const runoffECdS = runoffEC ? runoffEC / 1000 : null;
+  const inputECdS = inputEC ? inputEC / 1000 : null;
+
+  const ratio = (poreEC && runoffECdS)
+    ? (runoffECdS / poreEC) : null;
+
+  // Status
+  const stDN = drybackNocturno !== null ? getStatus(drybackNocturno, t.drybackNocturno) : 'info';
+  const stDT = drybackTotal !== null ? getStatus(drybackTotal, t.drybackTotal) : 'info';
+  const stPore = poreEC !== null ? getStatus(poreEC, t.poreEC) : 'info';
+  const stRunoff = runoffECdS !== null ? getStatus(runoffECdS, t.runoffEC) : 'info';
+  const stRatio = ratio !== null ? getStatus(ratio, t.ratio) : 'info';
+
+  // Render results
+  const grid = document.getElementById('resultGrid');
+  grid.innerHTML = `
+    <div class="result-card ${stDN}">
+      <div class="result-label">Dryback nocturno</div>
+      <div class="result-value">${drybackNocturno !== null ? drybackNocturno.toFixed(1) + '%' : '—'}</div>
+      <div class="result-sub">Target ${t.drybackNocturno.min}–${t.drybackNocturno.max}%<br>${getStatusLabel(stDN)}</div>
+    </div>
+    <div class="result-card ${stDT}">
+      <div class="result-label">Dryback total</div>
+      <div class="result-value">${drybackTotal !== null ? drybackTotal.toFixed(1) + '%' : '—'}</div>
+      <div class="result-sub">Target ${t.drybackTotal.min}–${t.drybackTotal.max}%<br>${getStatusLabel(stDT)}</div>
+    </div>
+    <div class="result-card ${stPore}">
+      <div class="result-label">Pore EC</div>
+      <div class="result-value">${poreEC !== null ? poreEC.toFixed(2) : '—'}</div>
+      <div class="result-sub">dS/m — target ${t.poreEC.min}–${t.poreEC.max}<br>${getStatusLabel(stPore)}</div>
+    </div>
+    <div class="result-card ${stRunoff}">
+      <div class="result-label">Runoff EC</div>
+      <div class="result-value">${runoffECdS !== null ? runoffECdS.toFixed(2) : '—'}</div>
+      <div class="result-sub">dS/m — target ${t.runoffEC.min}–${t.runoffEC.max}<br>${getStatusLabel(stRunoff)}</div>
+    </div>
+    ${ratio !== null ? `
+    <div class="result-card ${stRatio} full">
+      <div class="result-label">Ratio Runoff ÷ Pore EC</div>
+      <div class="result-value">${ratio.toFixed(2)}×</div>
+      <div class="result-sub">Target ${t.ratio.min}–${t.ratio.max}× — ${ratio <= 2.1 ? 'Distribución de sales homogénea' : ratio <= 2.5 ? 'Leve acumulación en fondo' : 'Acumulación elevada en fondo'}<br>${getStatusLabel(stRatio)}</div>
+    </div>` : ''}
+    ${(runoffVol !== null) ? `
+    <div class="result-card info full">
+      <div class="result-label">Volumen runoff</div>
+      <div class="result-value">${runoffVol}ml</div>
+      <div class="result-sub">${runoffVol < 50 ? 'Bajo — considerar más pulsos en Fase 1' : runoffVol < 150 ? 'Correcto para steering generativo' : runoffVol < 400 ? 'Bueno para steering vegetativo' : 'Alto — buen lavado de sales'}</div>
+    </div>` : ''}
+  `;
+
+  // Generate advice
+  const advice = generateAdvice(drybackNocturno, drybackTotal, poreEC, runoffECdS, ratio, runoffVol, inputECdS, t);
+  const adviceContainer = document.getElementById('adviceContainer');
+  adviceContainer.innerHTML = advice.map(a =>
+    `<div class="advice-item ${a.type}"><span class="advice-icon">${a.icon}</span><span>${a.text}</span></div>`
+  ).join('');
+
+  // Show results
+  document.getElementById('results').classList.add('show');
+
+  // Save to history
+  saveToHistory({
+    date: new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }),
+    drybackNocturno,
+    drybackTotal,
+    poreEC,
+    runoffECdS,
+    ratio,
+    phase: currentPhase
+  });
+
+  renderHistory();
+}
+
+// ============ ADVICE ENGINE ============
+function generateAdvice(dn, dt, pore, runoff, ratio, vol, inputEC, t) {
+  const advice = [];
+
+  // Dryback nocturno
+  if (dn !== null) {
+    if (dn < t.drybackNocturno.min) {
+      advice.push({ type: 'warn', icon: '🌙', text: `Dryback nocturno de ${dn.toFixed(1)}% está por debajo del target (${t.drybackNocturno.min}–${t.drybackNocturno.max}%). Adelantá el último pulso de la Fase 2 para llegar al apagado con menos VWC, o reducí el volumen del último riego.` });
+    } else if (dn > t.drybackNocturno.max) {
+      advice.push({ type: 'bad', icon: '🌙', text: `Dryback nocturno de ${dn.toFixed(1)}% supera el target (${t.drybackNocturno.min}–${t.drybackNocturno.max}%). El sustrato se está secando demasiado de noche. Acercá el último pulso de la Fase 2 al apagado de luces.` });
+    } else {
+      advice.push({ type: 'ok', icon: '🌙', text: `Dryback nocturno de ${dn.toFixed(1)}% — perfecto para la fase ${currentPhase}.` });
+    }
+  }
+
+  // Dryback total
+  if (dt !== null) {
+    if (dt < t.drybackTotal.min) {
+      advice.push({ type: 'warn', icon: '💧', text: `Dryback total de ${dt.toFixed(1)}% está por debajo del target (${t.drybackTotal.min}–${t.drybackTotal.max}%). Las plantas no están consumiendo suficiente. Reducí el volumen total de riego o aumentá el tiempo entre pulsos.` });
+    } else if (dt > t.drybackTotal.max) {
+      advice.push({ type: currentPhase === 'generativo' ? 'ok' : 'warn', icon: '💧', text: `Dryback total de ${dt.toFixed(1)}% ${currentPhase === 'generativo' ? 'está en rango generativo agresivo — correcto para semanas 1-4.' : `supera el target vegetativo (${t.drybackTotal.min}–${t.drybackTotal.max}%). Aumentá la frecuencia o el volumen del riego de mantenimiento.`}` });
+    } else {
+      advice.push({ type: 'ok', icon: '💧', text: `Dryback total de ${dt.toFixed(1)}% — en rango ideal para steering ${currentPhase}.` });
+    }
+  }
+
+  // Pore EC
+  if (pore !== null) {
+    if (pore < t.poreEC.min) {
+      advice.push({ type: 'warn', icon: '⚡', text: `Pore EC de ${pore.toFixed(2)} dS/m está baja (target ${t.poreEC.min}–${t.poreEC.max}). Puede haber exceso de lavado o nutrición insuficiente. Revisá la EC del input y reducí el runoff.` });
+    } else if (pore > t.poreEC.max) {
+      advice.push({ type: 'bad', icon: '⚡', text: `Pore EC de ${pore.toFixed(2)} dS/m está elevada (target ${t.poreEC.min}–${t.poreEC.max}). Hay acumulación de sales. Aumentá el runoff agregando 1-2 pulsos a la Fase 1.` });
+    } else {
+      advice.push({ type: 'ok', icon: '⚡', text: `Pore EC de ${pore.toFixed(2)} dS/m — en rango ideal para la semana actual.` });
+    }
+  }
+
+  // Runoff EC
+  if (runoff !== null) {
+    if (runoff > 7.0) {
+      advice.push({ type: 'bad', icon: '🚰', text: `Runoff de ${runoff.toFixed(2)} dS/m es muy alto. Acumulación severa en el fondo. Aumentá el volumen del riego principal para generar más drenaje y lavar las sales.` });
+    } else if (runoff > 6.0) {
+      advice.push({ type: 'warn', icon: '🚰', text: `Runoff de ${runoff.toFixed(2)} dS/m en el límite superior. Monitoreá la tendencia — si sigue subiendo hay que aumentar el lavado.` });
+    } else {
+      advice.push({ type: 'ok', icon: '🚰', text: `Runoff de ${runoff.toFixed(2)} dS/m — correcto.` });
+    }
+  }
+
+  // Ratio
+  if (ratio !== null) {
+    if (ratio > 2.5) {
+      advice.push({ type: 'bad', icon: '📊', text: `Ratio de ${ratio.toFixed(2)}× indica acumulación importante en el fondo del sustrato. El sensor no está captando las sales reales. Aumentá el runoff para igualar la distribución.` });
+    } else if (ratio > 2.2) {
+      advice.push({ type: 'warn', icon: '📊', text: `Ratio de ${ratio.toFixed(2)}× levemente alto. Hay algo más de sales en el fondo que en la zona del sensor. Monitoreá.` });
+    } else {
+      advice.push({ type: 'ok', icon: '📊', text: `Ratio de ${ratio.toFixed(2)}× — distribución de sales homogénea en el sustrato.` });
+    }
+  }
+
+  // Input EC vs Pore EC
+  if (inputEC && pore) {
+    const diff = pore / inputEC;
+    if (diff < 0.8) {
+      advice.push({ type: 'info', icon: '🧪', text: `Pore EC (${pore.toFixed(2)}) está por debajo de la EC del input (${inputEC.toFixed(2)} dS/m). El sustrato se está lavando más de lo que acumula. Normal con alto runoff.` });
+    } else if (diff > 1.5) {
+      advice.push({ type: 'warn', icon: '🧪', text: `Pore EC (${pore.toFixed(2)}) es ${diff.toFixed(1)}× la EC del input (${inputEC.toFixed(2)} dS/m). Buena acumulación generativa, pero vigilá que no siga subiendo.` });
+    }
+  }
+
+  // Runoff volume
+  if (vol !== null) {
+    if (vol < 30 && currentPhase === 'vegetativo') {
+      advice.push({ type: 'warn', icon: '💦', text: `Solo ${vol}ml de runoff en fase vegetativa. Aumentá el volumen del riego principal con 1-2 pulsos más para generar más drenaje y prevenir acumulación de sales.` });
+    } else if (vol > 500) {
+      advice.push({ type: 'info', icon: '💦', text: `${vol}ml de runoff — excelente lavado. Revisá que la EC del input sea suficiente para no empobrecer el sustrato.` });
+    }
+  }
+
+  if (advice.length === 0) {
+    advice.push({ type: 'info', icon: '📋', text: 'Ingresá los datos para ver el diagnóstico.' });
+  }
+
+  return advice;
+}
+
+// ============ HISTORY ============
+function saveToHistory(entry) {
+  history.unshift(entry);
+  if (history.length > 14) history = history.slice(0, 14);
+  localStorage.setItem('cuki-history', JSON.stringify(history));
+}
+
+function clearHistory() {
+  if (confirm('¿Borrar todo el historial?')) {
+    history = [];
+    localStorage.setItem('cuki-history', JSON.stringify(history));
+    renderHistory();
+  }
+}
+
+function getColorClass(val, min, max) {
+  if (val === null || val === undefined) return '';
+  if (val >= min && val <= max) return 'green';
+  if (val < min) return 'amber';
+  return 'red';
+}
+
+function renderHistory() {
+  const container = document.getElementById('historyContent');
+  if (history.length === 0) {
+    container.innerHTML = '<div class="history-empty">Sin registros todavía</div>';
+    return;
+  }
+
+  let html = `<div class="history-header-row">
+    <span>Fecha</span>
+    <span>DB noc.</span>
+    <span>DB tot.</span>
+    <span>Pore EC</span>
+    <span>Runoff</span>
+  </div>`;
+
+  history.forEach(h => {
+    const t = TARGETS[h.phase || 'vegetativo'];
+    html += `<div class="history-row">
+      <span class="date">${h.date}</span>
+      <span class="val ${h.drybackNocturno !== null ? getColorClass(h.drybackNocturno, t.drybackNocturno.min, t.drybackNocturno.max) : ''}">${h.drybackNocturno !== null ? h.drybackNocturno.toFixed(1) + '%' : '—'}</span>
+      <span class="val ${h.drybackTotal !== null ? getColorClass(h.drybackTotal, t.drybackTotal.min, t.drybackTotal.max) : ''}">${h.drybackTotal !== null ? h.drybackTotal.toFixed(1) + '%' : '—'}</span>
+      <span class="val ${h.poreEC !== null ? getColorClass(h.poreEC, t.poreEC.min, t.poreEC.max) : ''}">${h.poreEC !== null ? h.poreEC.toFixed(2) : '—'}</span>
+      <span class="val ${h.runoffECdS !== null ? getColorClass(h.runoffECdS, t.runoffEC.min, t.runoffEC.max) : ''}">${h.runoffECdS !== null ? h.runoffECdS.toFixed(2) : '—'}</span>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+// ============ INIT ============
+renderHistory();
+</script>
+</body>
+</html>
